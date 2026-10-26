@@ -1,6 +1,5 @@
 import { useState } from 'react'
 
-import { ApiErrorAlert } from './ApiErrorAlert'
 import { Button } from './Button'
 import {
   Alert,
@@ -89,27 +88,6 @@ export const AlertError: Story = {
 export const AlertSuccess: Story = {
   name: 'Alert / success',
   render: () => <Alert severity="success">Application saved.</Alert>,
-}
-export const ApiErrorMalformed: Story = {
-  name: 'ApiErrorAlert / malformed',
-  render: () => <ApiErrorAlert kind="malformed" />,
-}
-export const ApiErrorRateLimited: Story = {
-  name: 'ApiErrorAlert / rate limited',
-  render: () => <ApiErrorAlert kind="rateLimited" retryAfterSeconds={45} />,
-}
-export const ApiErrorNetwork: Story = {
-  name: 'ApiErrorAlert / network',
-  render: () => <ApiErrorAlert kind="network" />,
-}
-export const ApiErrorConflictOverride: Story = {
-  name: 'ApiErrorAlert / peculiar case (conflict + link)',
-  render: () => (
-    <ApiErrorAlert kind="conflict">
-      An account for jane@example.com already exists.{' '}
-      <Link href="#sign-in">Sign in</Link> instead.
-    </ApiErrorAlert>
-  ),
 }
 export const CardSurface: Story = {
   name: 'Card',
