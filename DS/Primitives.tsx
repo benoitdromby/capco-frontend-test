@@ -1,4 +1,5 @@
 import {
+  forwardRef,
   useId,
   type ComponentPropsWithoutRef,
   type ElementType,
@@ -147,38 +148,48 @@ const defaultElementTypes = {
   caption: 'p',
   eyebrow: 'p',
 } as const
-export function Typography({
-  component,
-  variant = 'body',
-  tone = 'default',
-  align,
-  className,
-  ...props
-}: TypographyProps) {
-  const elementType = component ?? defaultElementTypes[variant]
-  return (
-    <Text
-      elementType={elementType}
-      className={[
-        styles.text,
-        styles[variant],
-        tone !== 'default' && styles[tone],
-        align === 'center' && styles.center,
-        className,
-      ]
-        .filter(Boolean)
-        .join(' ')}
-      {...props}
-    />
-  )
-}
+export const Typography = forwardRef<HTMLElement, TypographyProps>(
+  function Typography(
+    {
+      component,
+      variant = 'body',
+      tone = 'default',
+      align,
+      className,
+      ...props
+    },
+    ref,
+  ) {
+    const elementType = component ?? defaultElementTypes[variant]
+    return (
+      <Text
+        ref={ref}
+        elementType={elementType}
+        className={[
+          styles.text,
+          styles[variant],
+          tone !== 'default' && styles[tone],
+          align === 'center' && styles.center,
+          className,
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        {...props}
+      />
+    )
+  },
+)
 
 type AlertProps = Omit<ComponentPropsWithoutRef<'div'>, 'style'> & {
   severity?: 'error' | 'success' | 'info'
 }
-export function Alert({ severity = 'info', className, ...props }: AlertProps) {
+export const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(
+  { severity = 'info', className, ...props },
+  ref,
+) {
   return (
     <Text
+      ref={ref}
       elementType="div"
       role={severity === 'error' ? 'alert' : 'status'}
       className={[
@@ -191,13 +202,15 @@ export function Alert({ severity = 'info', className, ...props }: AlertProps) {
       {...props}
     />
   )
-}
+})
 
 export type TextFieldProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
   'className' | 'size' | 'style'
 > & {
   label: ReactNode
+  /** Guidance shown before input, always visible regardless of `error` (WCAG 3.3.2). */
+  description?: ReactNode
   helperText?: ReactNode
   error?: boolean
   fullWidth?: boolean
@@ -207,6 +220,7 @@ export type TextFieldProps = Omit<
 }
 export function TextField({
   label,
+  description,
   helperText,
   error = false,
   fullWidth = false,
@@ -232,14 +246,19 @@ export function TextField({
         ref={inputRef}
         className={[styles.input, inputClassName].filter(Boolean).join(' ')}
       />
-      {Boolean(helperText) && (
+      {Boolean(description) && (
+        <Text slot="description" className={styles.description}>
+          {description}
+        </Text>
+      )}
+      {Boolean(helperText) && (error || !description) ? (
         <Text
           slot={error ? 'errorMessage' : 'description'}
           className={styles.description}
         >
           {helperText}
         </Text>
-      )}
+      ) : null}
     </AriaTextField>
   )
 }
