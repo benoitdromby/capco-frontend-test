@@ -1,6 +1,12 @@
-# KYC Application — Technical Test
+# KYC Application — Technical Test done by Benoit Dromby
 
-This repository is a technical test for frontend development. It provides a small, realistic product context and a running API so a developer can demonstrate how they build user-facing workflows against an existing contract.
+This submission implements the three frontend tickets in [`tickets/`](tickets/):
+
+- **[TICKET-001](tickets/TICKET-001-frontend-registration.md) — Applicant registration**: sign-up form with client-side and API validation, accessible error handling, and a confirmation screen.
+- **[TICKET-002](tickets/TICKET-002-frontend-login.md) — Applicant login**: sign-in form that routes to the journey URL returned by the API, with the same validation, error, and accessibility treatment as registration.
+- **[TICKET-003](tickets/TICKET-003-frontend-save-and-resume-form.md) — Save and resume the KYC form**: load, save, and resume a draft application across logout and login, including per-field validation, document-evidence upload, and conflict/session-expiry handling.
+
+Every notable decision, trade-off, and deliberately-skipped item made along the way is recorded in [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 ## Technical test scope
 
