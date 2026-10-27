@@ -146,6 +146,87 @@ test('a stale save conflicts with a change made elsewhere, and Reload recovers',
   await expect(page.getByLabel('Name')).toHaveValue('Changed Elsewhere')
 })
 
+test('a save failure shows a clear error, preserves entered values, and lets the user retry without a false success', async ({
+  page,
+}) => {
+  const email = uniqueEmail()
+  await registerAndSignIn(page, email)
+
+  await page.getByRole('button', { name: 'Start application' }).click()
+  await page.getByLabel('Name').fill('Jane Doe')
+
+  // Everything else in this test runs against the real backend; only this one
+  // PATCH is intercepted, and only once, so the retry below reaches the real
+  // backend and genuinely succeeds — proving retry isn't just "button enabled".
+  let interceptedOnce = false
+  await page.route('**/api/v1/applicant-applications/*/form', (route) => {
+    if (interceptedOnce || route.request().method() !== 'PATCH') {
+      return route.continue()
+    }
+    interceptedOnce = true
+    return route.fulfill({
+      status: 500,
+      contentType: 'application/vnd.api+json',
+      body: JSON.stringify({
+        errors: [
+          { status: '500', code: 'internal-error', detail: 'Something broke.' },
+        ],
+      }),
+    })
+  })
+
+  await page.getByRole('button', { name: 'Save' }).click()
+  await expect(page.getByRole('alert')).toHaveText('Something broke.')
+  await expect(page.getByLabel('Name')).toHaveValue('Jane Doe')
+  await expect(page.getByText('Unsaved changes.')).toBeVisible()
+  await expect(page.getByText(/^Saved at/)).not.toBeVisible()
+  const saveButton = page.getByRole('button', { name: 'Save' })
+  await expect(saveButton).toBeEnabled()
+
+  await saveButton.click()
+  await expect(page.getByText(/^Saved at/)).toBeVisible()
+})
+
+test('an expired session on save shows a clear notice, warns about unsaved changes, and offers a working sign-in link', async ({
+  page,
+}) => {
+  const email = uniqueEmail()
+  await registerAndSignIn(page, email)
+
+  await page.getByRole('button', { name: 'Start application' }).click()
+  await page.getByLabel('Name').fill('Jane Doe')
+
+  // Session expiry can't be produced for real against a freshly-logged-in
+  // session, so this one PATCH is intercepted to return a 401 — everything
+  // else (registration, login, navigation) still runs against the real backend.
+  await page.route('**/api/v1/applicant-applications/*/form', (route) => {
+    if (route.request().method() !== 'PATCH') return route.continue()
+    return route.fulfill({
+      status: 401,
+      contentType: 'application/vnd.api+json',
+      body: JSON.stringify({
+        errors: [
+          {
+            status: '401',
+            code: 'authentication-required',
+            detail: 'Sign in to continue.',
+          },
+        ],
+      }),
+    })
+  })
+
+  await page.getByRole('button', { name: 'Save' }).click()
+
+  await expect(page.getByText(/session has expired/i)).toBeVisible()
+  await expect(
+    page.getByText(/unsaved changes on this page will be lost/i),
+  ).toBeVisible()
+
+  await page.getByRole('link', { name: 'Sign in' }).click()
+  await expect(page).toHaveURL(/\/sign-in/)
+})
+
 test('Continue is blocked by red, per-field errors when required fields are empty', async ({
   page,
 }) => {
