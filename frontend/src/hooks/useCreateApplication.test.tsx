@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
-import { http, HttpResponse } from 'msw'
+import { http } from 'msw'
 import { describe, expect, it } from 'vitest'
 
+import { jsonApiError } from '../test/json-api-error'
 import { server } from '../test/server'
 
 import { useCreateApplication } from './useCreateApplication'
@@ -41,17 +42,10 @@ describe('useCreateApplication', () => {
   it('surfaces a forbidden error when the CSRF token is missing', async () => {
     server.use(
       http.post('/api/v1/applicant-applications', () =>
-        HttpResponse.json(
-          {
-            errors: [
-              {
-                status: '403',
-                code: 'access-denied',
-                detail: 'You do not have permission to access this resource.',
-              },
-            ],
-          },
-          { status: 403 },
+        jsonApiError(
+          403,
+          'access-denied',
+          'You do not have permission to access this resource.',
         ),
       ),
     )

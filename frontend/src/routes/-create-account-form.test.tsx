@@ -5,6 +5,7 @@ import { axe, toHaveNoViolations } from 'jest-axe'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it, vi } from 'vitest'
 
+import { jsonApiError } from '../test/json-api-error'
 import { server } from '../test/server'
 
 import { CreateAccountForm } from './-create-account-form'
@@ -149,18 +150,7 @@ describe('CreateAccountForm', () => {
   it('shows a conflict message with a sign-in link, focused, for a duplicate email', async () => {
     server.use(
       http.post('/api/v1/applicant-accounts', () =>
-        HttpResponse.json(
-          {
-            errors: [
-              {
-                status: '409',
-                code: 'email-already-registered',
-                detail: 'Taken.',
-              },
-            ],
-          },
-          { status: 409 },
-        ),
+        jsonApiError(409, 'email-already-registered', 'Taken.'),
       ),
     )
     const user = userEvent.setup()
@@ -181,17 +171,10 @@ describe('CreateAccountForm', () => {
 
   it('shows the retry delay for a rate-limited response', async () => {
     server.use(
-      http.post(
-        '/api/v1/applicant-accounts',
-        () =>
-          new HttpResponse(
-            JSON.stringify({
-              errors: [
-                { status: '429', code: 'rate-limited', detail: 'Slow down.' },
-              ],
-            }),
-            { status: 429, headers: { 'Retry-After': '45' } },
-          ),
+      http.post('/api/v1/applicant-accounts', () =>
+        jsonApiError(429, 'rate-limited', 'Slow down.', {
+          headers: { 'Retry-After': '45' },
+        }),
       ),
     )
     const user = userEvent.setup()
@@ -227,10 +210,7 @@ describe('CreateAccountForm', () => {
   it('shows a generic, focused alert and keeps entered values for an unrecognized error with no detail', async () => {
     server.use(
       http.post('/api/v1/applicant-accounts', () =>
-        HttpResponse.json(
-          { errors: [{ status: '500', code: 'some-unrecognized-code' }] },
-          { status: 500 },
-        ),
+        jsonApiError(500, 'some-unrecognized-code'),
       ),
     )
     const user = userEvent.setup()

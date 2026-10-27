@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
-import { http, HttpResponse } from 'msw'
+import { http } from 'msw'
 import { describe, expect, it } from 'vitest'
 
+import { jsonApiError } from '../test/json-api-error'
 import { server } from '../test/server'
 
 import { applicationFormQueryKey } from './useApplicationForm'
@@ -45,17 +46,10 @@ describe('useSaveApplicationForm', () => {
   it('surfaces a conflict error and leaves the cache untouched on a stale version', async () => {
     server.use(
       http.patch('/api/v1/applicant-applications/:applicationId/form', () =>
-        HttpResponse.json(
-          {
-            errors: [
-              {
-                status: '409',
-                code: 'form-version-conflict',
-                detail: 'Reload the form and try again.',
-              },
-            ],
-          },
-          { status: 409 },
+        jsonApiError(
+          409,
+          'form-version-conflict',
+          'Reload the form and try again.',
         ),
       ),
     )

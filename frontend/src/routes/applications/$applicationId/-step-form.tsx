@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 
 import { SessionExpiredNotice } from '../-session-expired-notice'
 import { apiErrorMessage } from '../../../api/error-messages'
+import { isSessionExpiredError, type ApiError } from '../../../api/errors'
 import { useSaveApplicationForm } from '../../../hooks/useSaveApplicationForm'
 import { useUploadDocumentEvidence } from '../../../hooks/useUploadDocumentEvidence'
 import styles from '../../application-step.module.css'
@@ -23,7 +24,6 @@ import type {
   ApplicantApplicationForm,
   ApplicationStep,
 } from '../../../api/applicant-applications'
-import type { ApiError } from '../../../api/errors'
 
 export interface StepFormProps {
   applicationId: string
@@ -81,7 +81,7 @@ function MutationErrorAlert({
   onReload: () => void
   onNavigate: (href: string) => void
 }) {
-  if (error.kind === 'unauthenticated' || error.kind === 'forbidden') {
+  if (isSessionExpiredError(error)) {
     return <SessionExpiredNotice warnUnsavedChanges />
   }
   if (error.kind === 'conflict') {

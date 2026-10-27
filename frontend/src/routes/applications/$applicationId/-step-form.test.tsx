@@ -5,6 +5,7 @@ import { axe, toHaveNoViolations } from 'jest-axe'
 import { http, HttpResponse } from 'msw'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { jsonApiError } from '../../../test/json-api-error'
 import { server } from '../../../test/server'
 
 import { StepForm, type StepFormProps } from './-step-form'
@@ -148,18 +149,7 @@ describe('StepForm', () => {
   it('preserves entered values and stays retryable when save fails', async () => {
     server.use(
       http.patch('/api/v1/applicant-applications/:applicationId/form', () =>
-        HttpResponse.json(
-          {
-            errors: [
-              {
-                status: '500',
-                code: 'internal-error',
-                detail: 'Something broke.',
-              },
-            ],
-          },
-          { status: 500 },
-        ),
+        jsonApiError(500, 'internal-error', 'Something broke.'),
       ),
     )
     const user = userEvent.setup()
@@ -179,17 +169,10 @@ describe('StepForm', () => {
   it('shows a Reload action on a version conflict', async () => {
     server.use(
       http.patch('/api/v1/applicant-applications/:applicationId/form', () =>
-        HttpResponse.json(
-          {
-            errors: [
-              {
-                status: '409',
-                code: 'form-version-conflict',
-                detail: 'Reload the form and try again.',
-              },
-            ],
-          },
-          { status: 409 },
+        jsonApiError(
+          409,
+          'form-version-conflict',
+          'Reload the form and try again.',
         ),
       ),
     )
@@ -207,18 +190,7 @@ describe('StepForm', () => {
   it('shows a session-expired notice with the warning when a save fails with 401', async () => {
     server.use(
       http.patch('/api/v1/applicant-applications/:applicationId/form', () =>
-        HttpResponse.json(
-          {
-            errors: [
-              {
-                status: '401',
-                code: 'authentication-required',
-                detail: 'Sign in to continue.',
-              },
-            ],
-          },
-          { status: 401 },
-        ),
+        jsonApiError(401, 'authentication-required', 'Sign in to continue.'),
       ),
     )
     const user = userEvent.setup()
@@ -315,17 +287,10 @@ describe('StepForm', () => {
       http.post(
         '/api/v1/applicant-applications/:applicationId/document-evidence',
         () =>
-          HttpResponse.json(
-            {
-              errors: [
-                {
-                  status: '422',
-                  code: 'unprocessable-form',
-                  detail: 'Document media type is not accepted.',
-                },
-              ],
-            },
-            { status: 422 },
+          jsonApiError(
+            422,
+            'unprocessable-form',
+            'Document media type is not accepted.',
           ),
       ),
     )
@@ -351,14 +316,7 @@ describe('StepForm', () => {
   it('has no automated accessibility violations on initial render or after a failed save', async () => {
     server.use(
       http.patch('/api/v1/applicant-applications/:applicationId/form', () =>
-        HttpResponse.json(
-          {
-            errors: [
-              { status: '500', code: 'internal-error', detail: 'Broke.' },
-            ],
-          },
-          { status: 500 },
-        ),
+        jsonApiError(500, 'internal-error', 'Broke.'),
       ),
     )
     const user = userEvent.setup()

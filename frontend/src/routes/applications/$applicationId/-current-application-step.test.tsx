@@ -5,6 +5,7 @@ import { axe, toHaveNoViolations } from 'jest-axe'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it, vi } from 'vitest'
 
+import { jsonApiError } from '../../../test/json-api-error'
 import { server } from '../../../test/server'
 
 import { CurrentApplicationStep } from './-current-application-step'
@@ -33,18 +34,7 @@ describe('CurrentApplicationStep', () => {
   it('shows a session-expired notice with the unsaved-changes warning on 401', async () => {
     server.use(
       http.get('/api/v1/applicant-applications/:applicationId/form', () =>
-        HttpResponse.json(
-          {
-            errors: [
-              {
-                status: '401',
-                code: 'authentication-required',
-                detail: 'Sign in to continue.',
-              },
-            ],
-          },
-          { status: 401 },
-        ),
+        jsonApiError(401, 'authentication-required', 'Sign in to continue.'),
       ),
     )
     renderStep('personal-details')
@@ -56,18 +46,7 @@ describe('CurrentApplicationStep', () => {
   it('offers to go to the current application on a 404', async () => {
     server.use(
       http.get('/api/v1/applicant-applications/:applicationId/form', () =>
-        HttpResponse.json(
-          {
-            errors: [
-              {
-                status: '404',
-                code: 'application-not-found',
-                detail: 'Application not found.',
-              },
-            ],
-          },
-          { status: 404 },
-        ),
+        jsonApiError(404, 'application-not-found', 'Application not found.'),
       ),
     )
     const { onNavigate } = renderStep('personal-details')
@@ -160,17 +139,10 @@ describe('CurrentApplicationStep', () => {
         })
       }),
       http.patch('/api/v1/applicant-applications/:applicationId/form', () =>
-        HttpResponse.json(
-          {
-            errors: [
-              {
-                status: '409',
-                code: 'form-version-conflict',
-                detail: 'Reload the form and try again.',
-              },
-            ],
-          },
-          { status: 409 },
+        jsonApiError(
+          409,
+          'form-version-conflict',
+          'Reload the form and try again.',
         ),
       ),
     )

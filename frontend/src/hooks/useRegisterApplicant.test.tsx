@@ -3,6 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 
+import { jsonApiError } from '../test/json-api-error'
 import { server } from '../test/server'
 
 import { useRegisterApplicant } from './useRegisterApplicant'
@@ -34,18 +35,7 @@ describe('useRegisterApplicant', () => {
   it('surfaces a conflict error for a duplicate email', async () => {
     server.use(
       http.post('/api/v1/applicant-accounts', () =>
-        HttpResponse.json(
-          {
-            errors: [
-              {
-                status: '409',
-                code: 'email-already-registered',
-                detail: 'Taken.',
-              },
-            ],
-          },
-          { status: 409 },
-        ),
+        jsonApiError(409, 'email-already-registered', 'Taken.'),
       ),
     )
     const { result } = renderWithQueryClient()

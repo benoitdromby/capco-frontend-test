@@ -3,6 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 
+import { jsonApiError } from '../test/json-api-error'
 import { server } from '../test/server'
 
 import { useCurrentApplication } from './useCurrentApplication'
@@ -56,18 +57,7 @@ describe('useCurrentApplication', () => {
   it('surfaces an unauthenticated error for an expired session', async () => {
     server.use(
       http.get('/api/v1/applicant-applications/current', () =>
-        HttpResponse.json(
-          {
-            errors: [
-              {
-                status: '401',
-                code: 'authentication-required',
-                detail: 'Sign in to continue.',
-              },
-            ],
-          },
-          { status: 401 },
-        ),
+        jsonApiError(401, 'authentication-required', 'Sign in to continue.'),
       ),
     )
     const { result } = renderHook(() => useCurrentApplication(), { wrapper })

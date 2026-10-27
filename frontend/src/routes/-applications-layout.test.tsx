@@ -2,10 +2,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { axe, toHaveNoViolations } from 'jest-axe'
-import { http, HttpResponse } from 'msw'
+import { http } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
 
+import { jsonApiError } from '../test/json-api-error'
 import { server } from '../test/server'
 
 import { ApplicationsLayout } from './-applications-layout'
@@ -53,14 +54,7 @@ describe('ApplicationsLayout', () => {
   it('shows an inline error and does not call onLoggedOut when logout fails', async () => {
     server.use(
       http.delete('/api/v1/applicant-sessions/current', () =>
-        HttpResponse.json(
-          {
-            errors: [
-              { status: '500', code: 'internal-error', detail: 'Broke.' },
-            ],
-          },
-          { status: 500 },
-        ),
+        jsonApiError(500, 'internal-error', 'Broke.'),
       ),
     )
     const user = userEvent.setup()
@@ -75,14 +69,7 @@ describe('ApplicationsLayout', () => {
   it('has no automated accessibility violations on initial render or after a failed logout', async () => {
     server.use(
       http.delete('/api/v1/applicant-sessions/current', () =>
-        HttpResponse.json(
-          {
-            errors: [
-              { status: '500', code: 'internal-error', detail: 'Broke.' },
-            ],
-          },
-          { status: 500 },
-        ),
+        jsonApiError(500, 'internal-error', 'Broke.'),
       ),
     )
     const user = userEvent.setup()

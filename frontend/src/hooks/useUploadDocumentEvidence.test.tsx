@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
-import { http, HttpResponse } from 'msw'
+import { http } from 'msw'
 import { describe, expect, it } from 'vitest'
 
+import { jsonApiError } from '../test/json-api-error'
 import { server } from '../test/server'
 
 import { applicationFormQueryKey } from './useApplicationForm'
@@ -53,17 +54,10 @@ describe('useUploadDocumentEvidence', () => {
       http.post(
         '/api/v1/applicant-applications/:applicationId/document-evidence',
         () =>
-          HttpResponse.json(
-            {
-              errors: [
-                {
-                  status: '422',
-                  code: 'unprocessable-form',
-                  detail: 'Document media type is not accepted.',
-                },
-              ],
-            },
-            { status: 422 },
+          jsonApiError(
+            422,
+            'unprocessable-form',
+            'Document media type is not accepted.',
           ),
       ),
     )

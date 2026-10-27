@@ -2,6 +2,7 @@ import { Alert, Button, Stack, Typography } from '@kyc/ui'
 import { useEffect, useRef } from 'react'
 
 import { apiErrorMessage } from '../../api/error-messages'
+import { isSessionExpiredError } from '../../api/errors'
 import { useCreateApplication } from '../../hooks/useCreateApplication'
 import { useCurrentApplication } from '../../hooks/useCurrentApplication'
 
@@ -54,8 +55,7 @@ export function CurrentApplicationJourney({
         <Typography component="h1" variant="heading">
           Your KYC application
         </Typography>
-        {query.error.kind === 'unauthenticated' ||
-        query.error.kind === 'forbidden' ? (
+        {isSessionExpiredError(query.error) ? (
           <SessionExpiredNotice />
         ) : (
           <Stack spacing={2}>

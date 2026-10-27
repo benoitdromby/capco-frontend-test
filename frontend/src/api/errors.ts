@@ -135,3 +135,8 @@ export async function parseApiErrorResponse(
       kind === 'rateLimited' ? parseRetryAfterSeconds(response) : undefined,
   })
 }
+
+/** True for a missing or no-longer-valid session — the session-expired notice's trigger. */
+export function isSessionExpiredError(error: ApiError): boolean {
+  return error.kind === 'unauthenticated' || error.kind === 'forbidden'
+}

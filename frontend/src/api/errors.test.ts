@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { parseApiErrorResponse } from './errors'
+import {
+  ApiError,
+  isSessionExpiredError,
+  parseApiErrorResponse,
+} from './errors'
 
 function jsonApiErrorResponse(
   status: number,
@@ -105,5 +109,29 @@ describe('parseApiErrorResponse', () => {
     const response = new Response(JSON.stringify({ data: {} }), { status: 500 })
 
     expect((await parseApiErrorResponse(response)).kind).toBe('unexpected')
+  })
+})
+
+describe('isSessionExpiredError', () => {
+  it.each(['unauthenticated', 'forbidden'] as const)(
+    'is true for %s',
+    (kind) => {
+      expect(isSessionExpiredError(new ApiError({ kind }))).toBe(true)
+    },
+  )
+
+  it.each([
+    'validation',
+    'malformed',
+    'invalidCredentials',
+    'notFound',
+    'conflict',
+    'unprocessable',
+    'rateLimited',
+    'server',
+    'network',
+    'unexpected',
+  ] as const)('is false for %s', (kind) => {
+    expect(isSessionExpiredError(new ApiError({ kind }))).toBe(false)
   })
 })

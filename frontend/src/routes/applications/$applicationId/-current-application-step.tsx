@@ -11,13 +11,13 @@ import { useEffect, useRef, type RefObject } from 'react'
 
 import { SessionExpiredNotice } from '../-session-expired-notice'
 import { apiErrorMessage } from '../../../api/error-messages'
+import { isSessionExpiredError, type ApiError } from '../../../api/errors'
 import { useApplicationForm } from '../../../hooks/useApplicationForm'
 import styles from '../../application-step.module.css'
 
 import { StepForm } from './-step-form'
 
 import type { ApplicationStep } from '../../../api/applicant-applications'
-import type { ApiError } from '../../../api/errors'
 
 export interface CurrentApplicationStepProps {
   applicationId: string
@@ -42,7 +42,7 @@ function LoadErrorNotice({
   onNavigate: (href: string) => void
   onRetry: () => void
 }) {
-  if (error.kind === 'unauthenticated' || error.kind === 'forbidden') {
+  if (isSessionExpiredError(error)) {
     return <SessionExpiredNotice warnUnsavedChanges />
   }
   if (error.kind === 'notFound') {

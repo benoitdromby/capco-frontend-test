@@ -3,6 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it, vi } from 'vitest'
 
+import { jsonApiError } from '../test/json-api-error'
 import { server } from '../test/server'
 
 import { useApplicantLogin } from './useApplicantLogin'
@@ -36,18 +37,7 @@ describe('useApplicantLogin', () => {
   it('surfaces an invalidCredentials error and does not clear the cache', async () => {
     server.use(
       http.post('/api/v1/applicant-sessions', () =>
-        HttpResponse.json(
-          {
-            errors: [
-              {
-                status: '401',
-                code: 'invalid-credentials',
-                detail: 'Invalid email or password',
-              },
-            ],
-          },
-          { status: 401 },
-        ),
+        jsonApiError(401, 'invalid-credentials', 'Invalid email or password'),
       ),
     )
     const { result, queryClient } = renderWithQueryClient()

@@ -5,6 +5,7 @@ import { axe, toHaveNoViolations } from 'jest-axe'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it, vi } from 'vitest'
 
+import { jsonApiError } from '../../test/json-api-error'
 import { server } from '../../test/server'
 
 import { CurrentApplicationJourney } from './-current-application-journey'
@@ -82,18 +83,7 @@ describe('CurrentApplicationJourney', () => {
   it('shows a session-expired notice without an unsaved-changes warning on a 401', async () => {
     server.use(
       http.get('/api/v1/applicant-applications/current', () =>
-        HttpResponse.json(
-          {
-            errors: [
-              {
-                status: '401',
-                code: 'authentication-required',
-                detail: 'Sign in to continue.',
-              },
-            ],
-          },
-          { status: 401 },
-        ),
+        jsonApiError(401, 'authentication-required', 'Sign in to continue.'),
       ),
     )
     renderJourney()
@@ -120,17 +110,10 @@ describe('CurrentApplicationJourney', () => {
   it('shows an inline error and does not navigate when draft creation fails', async () => {
     server.use(
       http.post('/api/v1/applicant-applications', () =>
-        HttpResponse.json(
-          {
-            errors: [
-              {
-                status: '403',
-                code: 'access-denied',
-                detail: 'You do not have permission to access this resource.',
-              },
-            ],
-          },
-          { status: 403 },
+        jsonApiError(
+          403,
+          'access-denied',
+          'You do not have permission to access this resource.',
         ),
       ),
     )

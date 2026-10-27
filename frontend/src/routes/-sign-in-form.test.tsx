@@ -5,6 +5,7 @@ import { axe, toHaveNoViolations } from 'jest-axe'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it, vi } from 'vitest'
 
+import { jsonApiError } from '../test/json-api-error'
 import { server } from '../test/server'
 
 import { SignInForm } from './-sign-in-form'
@@ -77,18 +78,7 @@ describe('SignInForm', () => {
   it('shows a generic invalid-credentials message without attaching it to the email field', async () => {
     server.use(
       http.post('/api/v1/applicant-sessions', () =>
-        HttpResponse.json(
-          {
-            errors: [
-              {
-                status: '401',
-                code: 'invalid-credentials',
-                detail: 'Invalid email or password',
-              },
-            ],
-          },
-          { status: 401 },
-        ),
+        jsonApiError(401, 'invalid-credentials', 'Invalid email or password'),
       ),
     )
     const user = userEvent.setup()
@@ -114,19 +104,9 @@ describe('SignInForm', () => {
   it('shows per-field errors from a 400 validation-failed response', async () => {
     server.use(
       http.post('/api/v1/applicant-sessions', () =>
-        HttpResponse.json(
-          {
-            errors: [
-              {
-                status: '400',
-                code: 'validation-failed',
-                detail: 'Enter a valid email address.',
-                source: { pointer: '/data/attributes/email' },
-              },
-            ],
-          },
-          { status: 400 },
-        ),
+        jsonApiError(400, 'validation-failed', 'Enter a valid email address.', {
+          pointer: '/data/attributes/email',
+        }),
       ),
     )
     const user = userEvent.setup()
@@ -146,17 +126,10 @@ describe('SignInForm', () => {
 
   it('shows the retry delay for a rate-limited response', async () => {
     server.use(
-      http.post(
-        '/api/v1/applicant-sessions',
-        () =>
-          new HttpResponse(
-            JSON.stringify({
-              errors: [
-                { status: '429', code: 'rate-limited', detail: 'Slow down.' },
-              ],
-            }),
-            { status: 429, headers: { 'Retry-After': '30' } },
-          ),
+      http.post('/api/v1/applicant-sessions', () =>
+        jsonApiError(429, 'rate-limited', 'Slow down.', {
+          headers: { 'Retry-After': '30' },
+        }),
       ),
     )
     const user = userEvent.setup()
@@ -175,10 +148,7 @@ describe('SignInForm', () => {
   it('shows a generic, focused alert and keeps entered values for an unrecognized error with no detail', async () => {
     server.use(
       http.post('/api/v1/applicant-sessions', () =>
-        HttpResponse.json(
-          { errors: [{ status: '500', code: 'some-unrecognized-code' }] },
-          { status: 500 },
-        ),
+        jsonApiError(500, 'some-unrecognized-code'),
       ),
     )
     const user = userEvent.setup()
