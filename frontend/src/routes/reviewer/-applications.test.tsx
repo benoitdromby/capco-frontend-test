@@ -3,10 +3,10 @@ import userEvent from '@testing-library/user-event'
 import { expect, describe, it, vi } from 'vitest'
 
 import {
-  parseReviewerApplicationsSearch,
   ReviewerApplicationsView,
   type ReviewerApplicationsResponse,
-} from './applications'
+} from './-applications-view'
+import { parseReviewerApplicationsSearch } from './applications'
 
 const response: ReviewerApplicationsResponse = {
   kind: 'found',
