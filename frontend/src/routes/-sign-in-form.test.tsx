@@ -139,6 +139,9 @@ describe('SignInForm', () => {
     expect(
       await screen.findByText('Enter a valid email address.'),
     ).toBeInTheDocument()
+    expect(screen.getByLabelText('Email address')).toHaveValue(
+      'jane@example.com',
+    )
   })
 
   it('shows the retry delay for a rate-limited response', async () => {
@@ -164,6 +167,34 @@ describe('SignInForm', () => {
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('30 seconds')
+    expect(screen.getByLabelText('Email address')).toHaveValue(
+      'jane@example.com',
+    )
+  })
+
+  it('shows a generic, focused alert and keeps entered values for an unrecognized error with no detail', async () => {
+    server.use(
+      http.post('/api/v1/applicant-sessions', () =>
+        HttpResponse.json(
+          { errors: [{ status: '500', code: 'some-unrecognized-code' }] },
+          { status: 500 },
+        ),
+      ),
+    )
+    const user = userEvent.setup()
+    renderForm()
+
+    await user.type(screen.getByLabelText('Email address'), 'jane@example.com')
+    await user.type(screen.getByLabelText('Password'), 'Secret!1')
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('Something went wrong')
+    expect(alert).toHaveFocus()
+    expect(screen.getByLabelText('Email address')).toHaveValue(
+      'jane@example.com',
+    )
+    expect(screen.getByLabelText('Password')).toHaveValue('Secret!1')
   })
 
   it('shows a generic message and keeps both entered values on a network failure', async () => {
@@ -184,7 +215,7 @@ describe('SignInForm', () => {
     expect(screen.getByLabelText('Password')).toHaveValue('Secret!1')
   })
 
-  it('prevents a duplicate submission while a login is pending', async () => {
+  it('exposes the pending state accessibly and prevents a duplicate submission while a login is pending', async () => {
     let callCount = 0
     server.use(
       http.post('/api/v1/applicant-sessions', async () => {
@@ -200,9 +231,16 @@ describe('SignInForm', () => {
     await user.type(screen.getByLabelText('Password'), 'Secret!1')
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
-    // The request is still in flight (artificial delay above). Submitting
-    // again — however it might be triggered in a real browser (a second
-    // click, or Enter in a field) — must not start a second request.
+    // The request is still in flight (artificial delay above). The button's
+    // accessible name changes and it reports aria-disabled (not the native
+    // `disabled` attribute, so it stays focusable/announceable) while pending.
+    const pendingButton = await screen.findByRole('button', {
+      name: 'Signing in…',
+    })
+    expect(pendingButton).toHaveAttribute('aria-disabled', 'true')
+
+    // Submitting again — however it might be triggered in a real browser (a
+    // second click, or Enter in a field) — must not start a second request.
     const form = container.querySelector('form')
     if (!form) throw new Error('expected a form element')
     fireEvent.submit(form)
