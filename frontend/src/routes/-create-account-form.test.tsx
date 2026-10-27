@@ -224,6 +224,32 @@ describe('CreateAccountForm', () => {
     expect(screen.getByLabelText('Password')).toHaveValue('Secret!1')
   })
 
+  it('shows a generic, focused alert and keeps entered values for an unrecognized error with no detail', async () => {
+    server.use(
+      http.post('/api/v1/applicant-accounts', () =>
+        HttpResponse.json(
+          { errors: [{ status: '500', code: 'some-unrecognized-code' }] },
+          { status: 500 },
+        ),
+      ),
+    )
+    const user = userEvent.setup()
+    renderForm()
+
+    await user.type(screen.getByLabelText('Email address'), 'jane@example.com')
+    await user.type(screen.getByLabelText('Password'), 'Secret!1')
+    await user.type(screen.getByLabelText('Confirm password'), 'Secret!1')
+    await user.click(screen.getByRole('button', { name: 'Create account' }))
+
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('Something went wrong')
+    expect(alert).toHaveFocus()
+    expect(screen.getByLabelText('Email address')).toHaveValue(
+      'jane@example.com',
+    )
+    expect(screen.getByLabelText('Password')).toHaveValue('Secret!1')
+  })
+
   it('has no automated accessibility violations on initial render or after a failed submit', async () => {
     const user = userEvent.setup()
     const { container } = renderForm()
