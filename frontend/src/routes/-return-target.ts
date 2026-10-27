@@ -1,3 +1,5 @@
+import { href } from 'react-router'
+
 export interface AccountAccessSearch {
   returnTo?: string
 }
@@ -20,5 +22,6 @@ export function accountAccessHref(
   path: '/sign-in' | '/create-account',
   returnTo?: string,
 ): string {
-  return returnTo ? `${path}?returnTo=${encodeURIComponent(returnTo)}` : path
+  const base = href(path)
+  return returnTo ? `${base}?returnTo=${encodeURIComponent(returnTo)}` : base
 }

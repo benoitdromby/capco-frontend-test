@@ -1,7 +1,7 @@
-import { redirect } from 'react-router'
+import { href, redirect } from 'react-router'
 
 export function clientLoader() {
-  return redirect('/create-account')
+  return redirect(href('/create-account'))
 }
 
 export default function IndexRoute() {

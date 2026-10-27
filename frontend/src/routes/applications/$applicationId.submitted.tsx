@@ -1,5 +1,5 @@
 import { Alert, Button, Typography } from '@kyc/ui'
-import { useNavigate } from 'react-router'
+import { href, useNavigate } from 'react-router'
 
 export default function SubmissionReceiptPage() {
   const navigate = useNavigate()
@@ -34,7 +34,7 @@ export default function SubmissionReceiptPage() {
         </Alert>
         <Button
           variant="quiet"
-          onClick={() => void navigate('/applications/current')}
+          onClick={() => void navigate(href('/applications/current'))}
         >
           DONE
         </Button>

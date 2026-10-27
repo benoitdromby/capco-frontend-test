@@ -16,7 +16,7 @@ import {
   Typography,
 } from '@kyc/ui'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { href, useNavigate } from 'react-router'
 import { z } from 'zod'
 
 import styles from './applications.module.css'
@@ -446,7 +446,7 @@ export default function ReviewerApplicationsPage({
       status: next.status ?? status,
       page: String(next.page ?? page),
     })
-    void navigate(`/reviewer/applications?${search}`)
+    void navigate(`${href('/reviewer/applications')}?${search}`)
   }
   return (
     <ReviewerApplicationsView

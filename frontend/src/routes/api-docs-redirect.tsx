@@ -1,5 +1,5 @@
-import { redirect } from 'react-router'
+import { href, redirect } from 'react-router'
 
 export function clientLoader() {
-  return redirect('/api-docs')
+  return redirect(href('/api-docs'))
 }
