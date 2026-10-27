@@ -1,12 +1,15 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { axe, toHaveNoViolations } from 'jest-axe'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it, vi } from 'vitest'
 
 import { server } from '../../../test/server'
 
 import { CurrentApplicationStep } from './-current-application-step'
+
+expect.extend(toHaveNoViolations)
 
 function renderStep(step: string, onNavigate = vi.fn()) {
   const queryClient = new QueryClient({
@@ -115,6 +118,19 @@ describe('CurrentApplicationStep', () => {
       }),
     ).toBeInTheDocument()
     expect(screen.getByLabelText('Name')).toBeInTheDocument()
+  })
+
+  it('has no automated accessibility violations once the form loads', async () => {
+    const { container } = renderStep('personal-details')
+    await screen.findByLabelText('Name')
+
+    expect(await axe(container)).toHaveNoViolations()
+  })
+
+  it('has no automated accessibility violations on the review step', async () => {
+    const { container } = renderStep('review')
+
+    expect(await axe(container)).toHaveNoViolations()
   })
 
   it('reloads from the server and discards local edits after a version conflict', async () => {

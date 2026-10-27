@@ -339,10 +339,13 @@ describe('StepForm', () => {
     const input = screen.getByLabelText('Document evidence')
     await user.upload(input, file)
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('Document media type is not accepted.')
+    expect((input as HTMLInputElement).value).toBe('')
+    expect(input).toHaveAttribute('aria-invalid', 'true')
+    expect(input).toHaveAccessibleDescription(
       'Document media type is not accepted.',
     )
-    expect((input as HTMLInputElement).value).toBe('')
   })
 
   it('has no automated accessibility violations on initial render or after a failed save', async () => {

@@ -283,6 +283,7 @@ export function StepForm({
           </Stack>
         ) : (
           <TextField
+            autoComplete={field.autoComplete}
             key={field.key}
             error={Boolean(clientFieldErrors[field.key])}
             fullWidth
@@ -305,6 +306,10 @@ export function StepForm({
           <label htmlFor="document-evidence">Document evidence</label>
           <input
             accept="image/jpeg,image/png"
+            aria-describedby={
+              uploadMutation.error ? 'document-evidence-error' : undefined
+            }
+            aria-invalid={Boolean(uploadMutation.error)}
             disabled={uploadMutation.isPending}
             id="document-evidence"
             onChange={handleFileChange}
@@ -317,11 +322,13 @@ export function StepForm({
             )}
           </Typography>
           {uploadMutation.error ? (
-            <MutationErrorAlert
-              error={uploadMutation.error}
-              onNavigate={onNavigate}
-              onReload={() => void handleReload()}
-            />
+            <div id="document-evidence-error">
+              <MutationErrorAlert
+                error={uploadMutation.error}
+                onNavigate={onNavigate}
+                onReload={() => void handleReload()}
+              />
+            </div>
           ) : null}
         </Stack>
       ) : null}

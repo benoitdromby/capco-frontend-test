@@ -7,6 +7,17 @@ export interface StepFieldConfig {
   key: keyof Answers
   label: string
   kind: 'text' | 'checkbox' | 'date' | 'email'
+  /**
+   * WCAG 2.2 AA 1.3.5 (Identify Input Purpose). Only set where the field's
+   * meaning is unambiguous. Deliberately left unset for `country` (personal
+   * details) and `documentCountry` — unlike `residentialCountry`, what each
+   * represents isn't defined by the contract, and aliasing either to the same
+   * "country" token as `residentialCountry` risks the browser autofilling the
+   * wrong remembered value into the wrong field. Also unset for `nationality`,
+   * `documentType`, `documentNumber`, and `expiry`, none of which have a
+   * standard autocomplete token.
+   */
+  autoComplete?: string
 }
 
 // Derived from the field order of the original frontend stub, which already
@@ -17,12 +28,17 @@ export const stepFieldConfigs: Record<
   readonly StepFieldConfig[]
 > = {
   'personal-details': [
-    { key: 'name', label: 'Name', kind: 'text' },
-    { key: 'dateOfBirth', label: 'Date of birth', kind: 'date' },
+    { key: 'name', label: 'Name', kind: 'text', autoComplete: 'name' },
+    {
+      key: 'dateOfBirth',
+      label: 'Date of birth',
+      kind: 'date',
+      autoComplete: 'bday',
+    },
     { key: 'country', label: 'Country', kind: 'text' },
     { key: 'nationality', label: 'Nationality', kind: 'text' },
-    { key: 'email', label: 'Email', kind: 'email' },
-    { key: 'phone', label: 'Phone', kind: 'text' },
+    { key: 'email', label: 'Email', kind: 'email', autoComplete: 'email' },
+    { key: 'phone', label: 'Phone', kind: 'text', autoComplete: 'tel' },
     {
       key: 'consentConfirmed',
       label: 'I confirm these details are accurate and belong to me.',
@@ -34,10 +50,30 @@ export const stepFieldConfigs: Record<
     { key: 'documentNumber', label: 'Document number', kind: 'text' },
     { key: 'documentCountry', label: 'Document country', kind: 'text' },
     { key: 'expiry', label: 'Expiry', kind: 'date' },
-    { key: 'street', label: 'Street', kind: 'text' },
-    { key: 'city', label: 'City', kind: 'text' },
-    { key: 'postal', label: 'Postal code', kind: 'text' },
-    { key: 'residentialCountry', label: 'Residential country', kind: 'text' },
+    {
+      key: 'street',
+      label: 'Street',
+      kind: 'text',
+      autoComplete: 'street-address',
+    },
+    {
+      key: 'city',
+      label: 'City',
+      kind: 'text',
+      autoComplete: 'address-level2',
+    },
+    {
+      key: 'postal',
+      label: 'Postal code',
+      kind: 'text',
+      autoComplete: 'postal-code',
+    },
+    {
+      key: 'residentialCountry',
+      label: 'Residential country',
+      kind: 'text',
+      autoComplete: 'country',
+    },
   ],
 }
 
