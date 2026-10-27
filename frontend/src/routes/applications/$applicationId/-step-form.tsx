@@ -1,4 +1,4 @@
-import { Alert, Button, Stack, TextField, Typography } from '@kyc/ui'
+import { Alert, Button, Checkbox, Stack, TextField, Typography } from '@kyc/ui'
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 
 import { SessionExpiredNotice } from '../-session-expired-notice'
@@ -255,32 +255,19 @@ export function StepForm({
     >
       {stepFieldConfigs[step].map((field) =>
         field.kind === 'checkbox' ? (
-          <Stack key={field.key} spacing={0.5}>
-            <label className={styles.checkboxField}>
-              <input
-                ref={(element) => {
-                  fieldRefs.current[field.key] = element ?? undefined
-                }}
-                aria-describedby={
-                  clientFieldErrors[field.key]
-                    ? `${field.key}-error`
-                    : undefined
-                }
-                aria-invalid={Boolean(clientFieldErrors[field.key])}
-                checked={Boolean(answers[field.key])}
-                onChange={(event) =>
-                  handleFieldChange(field.key, event.target.checked)
-                }
-                type="checkbox"
-              />
-              {field.label}
-            </label>
-            {clientFieldErrors[field.key] ? (
-              <span id={`${field.key}-error`} className={styles.fieldError}>
-                {clientFieldErrors[field.key]}
-              </span>
-            ) : null}
-          </Stack>
+          <Checkbox
+            key={field.key}
+            inputRef={(element) => {
+              fieldRefs.current[field.key] = element ?? undefined
+            }}
+            checked={Boolean(answers[field.key])}
+            error={Boolean(clientFieldErrors[field.key])}
+            helperText={clientFieldErrors[field.key]}
+            label={field.label}
+            onChange={(event) =>
+              handleFieldChange(field.key, event.target.checked)
+            }
+          />
         ) : (
           <TextField
             autoComplete={field.autoComplete}

@@ -1,0 +1,26 @@
+.field {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.label {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+.input:focus-visible {
+  border-color: #3157c8;
+  outline: 2px solid #3157c8;
+  outline-offset: 1px;
+}
+.input[aria-invalid='true'] {
+  outline: 1px solid #b42318;
+}
+.description {
+  color: #526176;
+  font-size: 0.875rem;
+}
+.errorMessage {
+  color: #b42318;
+  font-size: 0.875rem;
+}

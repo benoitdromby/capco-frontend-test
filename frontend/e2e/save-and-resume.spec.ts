@@ -245,4 +245,17 @@ test('Continue is blocked by red, per-field errors when required fields are empt
   await expect(
     page.getByRole('heading', { level: 1, name: 'Identity and address' }),
   ).not.toBeVisible()
+
+  // The consent checkbox is also unchecked on this blank submit, so its own
+  // error renders simultaneously (focus still goes to Name, the earlier
+  // field) — verified in a real browser, since jsdom can't compute CSS.
+  const checkbox = page.getByRole('checkbox', {
+    name: 'I confirm these details are accurate and belong to me.',
+  })
+  const checkboxError = page.getByText(
+    'Confirm that these details are accurate before continuing.',
+  )
+  await expect(checkboxError).toBeVisible()
+  await expect(checkboxError).toHaveCSS('color', 'rgb(180, 35, 24)')
+  await expect(checkbox).toHaveAttribute('aria-invalid', 'true')
 })

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { Button } from './Button'
+import { Checkbox } from './Checkbox'
 import {
   Alert,
   Box,
@@ -77,6 +78,20 @@ export const TextInputPersistentDescription: Story = {
     />
   ),
 }
+export const CheckboxDefault: Story = {
+  name: 'Checkbox',
+  render: () => <CheckboxStory />,
+}
+export const CheckboxInvalid: Story = {
+  name: 'Checkbox / invalid',
+  render: () => (
+    <Checkbox
+      label="I confirm these details are accurate and belong to me."
+      error
+      helperText="Confirm that these details are accurate before continuing."
+    />
+  ),
+}
 export const AlertInfo: Story = {
   name: 'Alert / info',
   render: () => <Alert severity="info">Applications are being reviewed.</Alert>,
@@ -149,6 +164,17 @@ export const DataTable: Story = {
       </TableBody>
     </Table>
   ),
+}
+
+function CheckboxStory() {
+  const [checked, setChecked] = useState(false)
+  return (
+    <Checkbox
+      label="Email me about my application status"
+      checked={checked}
+      onChange={(event) => setChecked(event.target.checked)}
+    />
+  )
 }
 
 function SelectStory() {

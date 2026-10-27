@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   CardContent,
+  Checkbox,
   Stack,
   Typography,
 } from '@kyc/ui'
@@ -90,10 +91,7 @@ export function CurrentApplicationStep({
                 Review application
               </Typography>
               <Typography>Your application is ready for review.</Typography>
-              <label>
-                <input type="checkbox" /> I confirm the information is complete
-                and accurate.
-              </label>
+              <Checkbox label="I confirm the information is complete and accurate." />
               <Button
                 onClick={() =>
                   onNavigate(`/applications/${applicationId}/submitted`)
