@@ -13,4 +13,16 @@ export const handlers = [
         },
       }),
   ),
+  http.post('/api/v1/applicant-sessions', () =>
+    HttpResponse.json(
+      {
+        data: {
+          type: 'applicant-sessions',
+          id: '00000000-0000-4000-8000-000000000002',
+          attributes: { href: '/applications/current' },
+        },
+      },
+      { status: 201 },
+    ),
+  ),
 ]

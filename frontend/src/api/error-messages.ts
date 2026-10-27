@@ -1,7 +1,7 @@
-import type { ApiError } from './errors'
+import type { ApiError, ApiFieldError } from './errors'
 import type { ReactNode } from 'react'
 
-const genericMessage = 'Something went wrong. Please try again.'
+export const genericMessage = 'Something went wrong. Please try again.'
 
 /**
  * Maps a non-field API error to a display message, for rendering in an
@@ -22,5 +22,28 @@ export function apiErrorMessage(
       return genericMessage
     default:
       return error.detail ?? genericMessage
+  }
+}
+
+export interface ApiFieldErrors {
+  email?: string
+  password?: string
+}
+
+function fieldError(
+  fieldErrors: ApiFieldError[] | undefined,
+  field: string,
+): string | undefined {
+  return fieldErrors?.find((entry) => entry.field === field)?.detail
+}
+
+/** Maps a validation-kind API error's field errors to email/password messages. */
+export function apiFieldErrors(
+  error: ApiError | null | undefined,
+): ApiFieldErrors {
+  if (!error || error.kind !== 'validation') return {}
+  return {
+    email: fieldError(error.fieldErrors, 'email'),
+    password: fieldError(error.fieldErrors, 'password'),
   }
 }

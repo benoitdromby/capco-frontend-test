@@ -10,7 +10,16 @@ import {
 } from '@kyc/ui'
 import { useEffect, useRef, useState } from 'react'
 
+import {
+  apiErrorMessage,
+  apiFieldErrors,
+  genericMessage,
+  type ApiFieldErrors,
+} from '../api/error-messages'
+import { useApplicantLogin } from '../hooks/useApplicantLogin'
+
 import { accountAccessHref, isSafeJourneyPath } from './-return-target'
+import { validateSignInForm } from './-sign-in-validation'
 import styles from './account-access.module.css'
 
 export interface SignInFormProps {
@@ -26,39 +35,33 @@ export function SignInForm({
 }: SignInFormProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState<string>()
-  const [emailError, setEmailError] = useState<string>()
-  const [passwordError, setPasswordError] = useState<string>()
-  const emailInput = useRef<HTMLInputElement>(null)
-  const passwordInput = useRef<HTMLInputElement>(null)
+  const [clientFieldErrors, setClientFieldErrors] = useState<ApiFieldErrors>({})
+  const [hasUnsafeDestination, setHasUnsafeDestination] = useState(false)
+  const emailInputRef = useRef<HTMLInputElement>(null)
+  const passwordInputRef = useRef<HTMLInputElement>(null)
+  const formErrorRef = useRef<HTMLDivElement>(null)
+
+  const { mutate, isPending, error, reset } = useApplicantLogin()
+
+  const serverFieldErrors = apiFieldErrors(error)
+  const fieldErrors: ApiFieldErrors = {
+    email: clientFieldErrors.email ?? serverFieldErrors.email,
+    password: clientFieldErrors.password ?? serverFieldErrors.password,
+  }
+  const formErrorMessage = hasUnsafeDestination
+    ? genericMessage
+    : apiErrorMessage(error)
 
   useEffect(() => {
-    if (emailError) {
-      emailInput.current?.focus()
-    } else if (passwordError) {
-      passwordInput.current?.focus()
-    }
-  }, [emailError, passwordError])
+    if (fieldErrors.email) emailInputRef.current?.focus()
+    else if (fieldErrors.password) passwordInputRef.current?.focus()
+  }, [fieldErrors.email, fieldErrors.password])
 
-  async function submit(): Promise<void> {
-    setError(undefined)
-    setEmailError(undefined)
-    setPasswordError(undefined)
-
-    try {
-      const destination = returnTo ?? '/applications/current'
-      if (!isSafeJourneyPath(destination)) {
-        throw new Error('The destination is invalid.')
-      }
-      onSuccess(destination)
-    } catch (cause) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : 'Account access could not be completed.',
-      )
+  useEffect(() => {
+    if ((error && error.kind !== 'validation') || hasUnsafeDestination) {
+      formErrorRef.current?.focus()
     }
-  }
+  }, [error, hasUnsafeDestination])
 
   return (
     <main className={styles.page}>
@@ -69,7 +72,26 @@ export function SignInForm({
             className={styles.form}
             onSubmit={(event) => {
               event.preventDefault()
-              void submit()
+              if (isPending) return
+              const errors = validateSignInForm({ email, password })
+              if (errors) {
+                setClientFieldErrors(errors)
+                return
+              }
+              setClientFieldErrors({})
+              setHasUnsafeDestination(false)
+              mutate(
+                { email, password },
+                {
+                  onSuccess: (href) => {
+                    if (!isSafeJourneyPath(href)) {
+                      setHasUnsafeDestination(true)
+                      return
+                    }
+                    onSuccess(href)
+                  },
+                },
+              )
             }}
             spacing={3}
           >
@@ -81,23 +103,28 @@ export function SignInForm({
                 Sign in to continue your KYC application.
               </Typography>
             </Stack>
-            {(error ?? emailError ?? passwordError) ? (
-              <Alert aria-live="assertive" role="alert" severity="error">
-                {error ?? emailError ?? passwordError}
+            {formErrorMessage ? (
+              <Alert ref={formErrorRef} severity="error" tabIndex={-1}>
+                {formErrorMessage}
               </Alert>
             ) : null}
             <TextField
               autoComplete="email"
-              error={Boolean(emailError)}
+              error={Boolean(fieldErrors.email)}
               fullWidth
-              helperText={emailError}
+              helperText={fieldErrors.email}
               id="applicant-email"
-              inputRef={emailInput}
+              inputRef={emailInputRef}
               label="Email address"
               name="email"
               onChange={(event) => {
                 setEmail(event.target.value)
-                setEmailError(undefined)
+                setClientFieldErrors((previous) => ({
+                  ...previous,
+                  email: undefined,
+                }))
+                setHasUnsafeDestination(false)
+                reset()
               }}
               required
               type="email"
@@ -105,16 +132,21 @@ export function SignInForm({
             />
             <TextField
               autoComplete="current-password"
-              error={Boolean(passwordError)}
+              error={Boolean(fieldErrors.password)}
               fullWidth
-              helperText={passwordError}
+              helperText={fieldErrors.password}
               id="applicant-password"
-              inputRef={passwordInput}
+              inputRef={passwordInputRef}
               label="Password"
               name="password"
               onChange={(event) => {
                 setPassword(event.target.value)
-                setPasswordError(undefined)
+                setClientFieldErrors((previous) => ({
+                  ...previous,
+                  password: undefined,
+                }))
+                setHasUnsafeDestination(false)
+                reset()
               }}
               required
               type="password"
@@ -125,8 +157,9 @@ export function SignInForm({
               fullWidth
               size="large"
               type="submit"
+              isPending={isPending}
             >
-              Sign in
+              {isPending ? 'Signing in…' : 'Sign in'}
             </Button>
             <Typography
               className={styles.footer}

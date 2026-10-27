@@ -10,11 +10,10 @@ import {
 } from '@kyc/ui'
 import { useEffect, useRef, useState } from 'react'
 
-import { apiErrorMessage } from '../api/error-messages'
+import { apiErrorMessage, apiFieldErrors } from '../api/error-messages'
 import { useRegisterApplicant } from '../hooks/useRegisterApplicant'
 
 import {
-  fieldErrorsFromApiError,
   passwordRequirementsText,
   validateCreateAccountForm,
   type CreateAccountFieldErrors,
@@ -44,7 +43,7 @@ export function CreateAccountForm({
 
   const { mutate, isPending, isSuccess, error, reset } = useRegisterApplicant()
 
-  const serverFieldErrors = fieldErrorsFromApiError(error)
+  const serverFieldErrors = apiFieldErrors(error)
   const fieldErrors: CreateAccountFieldErrors = {
     email: clientFieldErrors.email ?? serverFieldErrors.email,
     password: clientFieldErrors.password ?? serverFieldErrors.password,

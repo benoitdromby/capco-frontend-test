@@ -1,7 +1,5 @@
 import { z } from 'zod'
 
-import type { ApiError, ApiFieldError } from '../api/errors'
-
 export const passwordRequirementsText =
   'Use at least six characters, including one uppercase letter and one special character.'
 
@@ -57,21 +55,4 @@ export function validateCreateAccountForm(
     }
   }
   return errors
-}
-
-function fieldError(
-  fieldErrors: ApiFieldError[] | undefined,
-  field: string,
-): string | undefined {
-  return fieldErrors?.find((entry) => entry.field === field)?.detail
-}
-
-export function fieldErrorsFromApiError(
-  error: ApiError | null | undefined,
-): CreateAccountFieldErrors {
-  if (!error || error.kind !== 'validation') return {}
-  return {
-    email: fieldError(error.fieldErrors, 'email'),
-    password: fieldError(error.fieldErrors, 'password'),
-  }
 }
