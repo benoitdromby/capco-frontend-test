@@ -33,6 +33,10 @@
 .saveStatus {
   min-height: 1.5em;
 }
+.fieldError {
+  color: #b42318;
+  font-size: 0.875rem;
+}
 
 @media (min-width: 768px) {
   .page {

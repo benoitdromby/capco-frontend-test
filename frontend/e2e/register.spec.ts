@@ -53,3 +53,14 @@ test('registering an already-used email shows a conflict message with a sign-in 
     page.getByRole('heading', { level: 1, name: 'Account created' }),
   ).not.toBeVisible()
 })
+
+test('a field error is actually rendered in red, not just linked for screen readers', async ({
+  page,
+}) => {
+  await page.goto('/create-account')
+  await page.getByRole('button', { name: 'Create account' }).click()
+
+  const emailError = page.getByText('Enter your email address.')
+  await expect(emailError).toBeVisible()
+  await expect(emailError).toHaveCSS('color', 'rgb(180, 35, 24)')
+})

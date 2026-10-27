@@ -29,6 +29,20 @@ const defaultForm: ApplicantApplicationForm = {
   version: 0,
 }
 
+async function fillPersonalDetails(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(screen.getByLabelText('Name'), 'Jane Doe')
+  await user.type(screen.getByLabelText('Date of birth'), '1990-01-01')
+  await user.type(screen.getByLabelText('Country'), 'FR')
+  await user.type(screen.getByLabelText('Nationality'), 'FR')
+  await user.type(screen.getByLabelText('Email'), 'jane@example.com')
+  await user.type(screen.getByLabelText('Phone'), '+33612345678')
+  await user.click(
+    screen.getByRole('checkbox', {
+      name: 'I confirm these details are accurate and belong to me.',
+    }),
+  )
+}
+
 function renderStepForm(props: Partial<StepFormProps> = {}) {
   const queryClient = new QueryClient({
     defaultOptions: { mutations: { retry: false } },
@@ -93,6 +107,42 @@ describe('StepForm', () => {
 
     await user.type(screen.getByLabelText('Email'), 'jane@example.com')
     expect(screen.getByText('Unsaved changes.')).toBeInTheDocument()
+  })
+
+  it('saves successfully with other required fields still empty — Save never requires completeness', async () => {
+    const user = userEvent.setup()
+    renderStepForm()
+
+    await user.type(screen.getByLabelText('Name'), 'Jane Doe')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(
+      await screen.findByText(/^Saved at \d{1,2}:\d{2}/),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByText('Date of birth is required.'),
+    ).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Date of birth')).not.toHaveAttribute(
+      'aria-invalid',
+      'true',
+    )
+  })
+
+  it('saves successfully but still flags a malformed value already entered, even though other fields are empty', async () => {
+    const user = userEvent.setup()
+    renderStepForm()
+
+    await user.type(screen.getByLabelText('Email'), 'not-an-email')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(
+      await screen.findByText(/^Saved at \d{1,2}:\d{2}/),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Enter a valid email address.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Email')).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    )
   })
 
   it('preserves entered values and stays retryable when save fails', async () => {
@@ -208,6 +258,7 @@ describe('StepForm', () => {
     const user = userEvent.setup()
     const { onNavigate } = renderStepForm()
 
+    await fillPersonalDetails(user)
     await user.click(screen.getByRole('button', { name: 'Continue' }))
 
     expect(onNavigate).toHaveBeenCalledWith(
@@ -215,11 +266,27 @@ describe('StepForm', () => {
     )
   })
 
-  it('stays and shows the incomplete message when Continue reports this step still incomplete', async () => {
+  it('blocks Continue and shows a field error when a required field is empty, without calling the API', async () => {
     const user = userEvent.setup()
     const { onNavigate } = renderStepForm()
 
-    // Default PATCH handler echoes the step back as "current", never "complete".
+    // No PATCH handler override; onUnhandledRequest: 'error' in setup.ts
+    // would fail this test if validation didn't actually block the call.
+    await user.click(screen.getByRole('button', { name: 'Continue' }))
+
+    expect(await screen.findByText('Name is required.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Name')).toHaveFocus()
+    expect(onNavigate).not.toHaveBeenCalled()
+  })
+
+  it('stays and shows the server-driven incomplete message when every client-validatable field is filled but the server still reports this step incomplete', async () => {
+    const user = userEvent.setup()
+    const { onNavigate } = renderStepForm()
+
+    // All fields filled (client validation passes); default PATCH handler
+    // still echoes the step back as "current", never "complete" — simulating
+    // a server-side completeness reason the client can't see on its own.
+    await fillPersonalDetails(user)
     await user.click(screen.getByRole('button', { name: 'Continue' }))
 
     expect(

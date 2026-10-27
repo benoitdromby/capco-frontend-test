@@ -1,5 +1,5 @@
 import { Alert, Button, Stack, TextField, Typography } from '@kyc/ui'
-import { useState, type ChangeEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 
 import { SessionExpiredNotice } from '../-session-expired-notice'
 import { apiErrorMessage } from '../../../api/error-messages'
@@ -7,7 +7,16 @@ import { useSaveApplicationForm } from '../../../hooks/useSaveApplicationForm'
 import { useUploadDocumentEvidence } from '../../../hooks/useUploadDocumentEvidence'
 import styles from '../../application-step.module.css'
 
-import { pickStepAnswers, stepFieldConfigs } from './-form-steps'
+import {
+  pickStepAnswers,
+  stepFieldConfigs,
+  type StepFieldConfig,
+} from './-form-steps'
+import {
+  validateStepFieldFormats,
+  validateStepForm,
+  type StepFieldErrors,
+} from './-step-form-validation'
 
 import type {
   Answers,
@@ -35,6 +44,12 @@ function saveStatusText(savedAt: Date | null, dirty: boolean): string {
   if (savedAt) return `Saved at ${formatTime(savedAt)}.`
   if (dirty) return 'Unsaved changes.'
   return ''
+}
+
+function textFieldInputType(kind: StepFieldConfig['kind']): string {
+  if (kind === 'date') return 'date'
+  if (kind === 'email') return 'email'
+  return 'text'
 }
 
 function documentEvidenceStatusText(
@@ -113,9 +128,27 @@ export function StepForm({
   const [dirty, setDirty] = useState(false)
   const [savedAt, setSavedAt] = useState<Date | null>(null)
   const [incomplete, setIncomplete] = useState(false)
+  const [clientFieldErrors, setClientFieldErrors] = useState<StepFieldErrors>(
+    {},
+  )
+  const [validationAttempt, setValidationAttempt] = useState(0)
+  const fieldRefs = useRef<Partial<Record<keyof Answers, HTMLInputElement>>>({})
 
   const saveMutation = useSaveApplicationForm(applicationId)
   const uploadMutation = useUploadDocumentEvidence(applicationId)
+
+  // Only reacts to a failed-Continue attempt, not to clientFieldErrors
+  // directly — with a dynamic, per-step field set there's no fixed
+  // dependency list, and watching the error object would re-fire (and
+  // re-steal focus) on every keystroke as errors clear one at a time.
+  useEffect(() => {
+    if (validationAttempt === 0) return
+    const firstInvalid = stepFieldConfigs[step].find(
+      (field) => clientFieldErrors[field.key],
+    )
+    if (firstInvalid) fieldRefs.current[firstInvalid.key]?.focus()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [validationAttempt])
 
   // Re-seeding only ever happens here, from the value `refetch` resolves to
   // directly — never from an effect watching the `form` prop, which would
@@ -135,11 +168,20 @@ export function StepForm({
     setDirty(true)
     setSavedAt(null)
     setIncomplete(false)
+    setClientFieldErrors((previous) => ({ ...previous, [key]: undefined }))
     saveMutation.reset()
   }
 
   function handleSave() {
     if (saveMutation.isPending) return
+    // Save never requires completeness — leaving fields empty and saving is
+    // a supported way to keep partial progress, so only format problems in
+    // what's already entered are surfaced here, never "required" (that's a
+    // Continue-only concern, see validateStepForm). Also clears any stale
+    // "complete all required fields" banner from an earlier Continue attempt,
+    // since the user has now chosen to save as-is instead.
+    setClientFieldErrors(validateStepFieldFormats(step, answers) ?? {})
+    setIncomplete(false)
     saveMutation.mutate(
       { step, answers, version: form.version },
       {
@@ -153,6 +195,13 @@ export function StepForm({
 
   function handleContinue() {
     if (saveMutation.isPending) return
+    const errors = validateStepForm(step, answers)
+    if (errors) {
+      setClientFieldErrors(errors)
+      setValidationAttempt((attempt) => attempt + 1)
+      return
+    }
+    setClientFieldErrors({})
     saveMutation.mutate(
       { step, answers, version: form.version },
       {
@@ -206,24 +255,46 @@ export function StepForm({
     >
       {stepFieldConfigs[step].map((field) =>
         field.kind === 'checkbox' ? (
-          <label key={field.key} className={styles.checkboxField}>
-            <input
-              checked={Boolean(answers[field.key])}
-              onChange={(event) =>
-                handleFieldChange(field.key, event.target.checked)
-              }
-              type="checkbox"
-            />
-            {field.label}
-          </label>
+          <Stack key={field.key} spacing={0.5}>
+            <label className={styles.checkboxField}>
+              <input
+                ref={(element) => {
+                  fieldRefs.current[field.key] = element ?? undefined
+                }}
+                aria-describedby={
+                  clientFieldErrors[field.key]
+                    ? `${field.key}-error`
+                    : undefined
+                }
+                aria-invalid={Boolean(clientFieldErrors[field.key])}
+                checked={Boolean(answers[field.key])}
+                onChange={(event) =>
+                  handleFieldChange(field.key, event.target.checked)
+                }
+                type="checkbox"
+              />
+              {field.label}
+            </label>
+            {clientFieldErrors[field.key] ? (
+              <span id={`${field.key}-error`} className={styles.fieldError}>
+                {clientFieldErrors[field.key]}
+              </span>
+            ) : null}
+          </Stack>
         ) : (
           <TextField
             key={field.key}
+            error={Boolean(clientFieldErrors[field.key])}
             fullWidth
+            helperText={clientFieldErrors[field.key]}
+            inputRef={(element) => {
+              fieldRefs.current[field.key] = element ?? undefined
+            }}
             label={field.label}
             onChange={(event) =>
               handleFieldChange(field.key, event.target.value)
             }
+            type={textFieldInputType(field.kind)}
             value={(answers[field.key] as string | undefined) ?? ''}
           />
         ),

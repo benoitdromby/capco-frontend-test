@@ -6,7 +6,7 @@ import type {
 export interface StepFieldConfig {
   key: keyof Answers
   label: string
-  kind: 'text' | 'checkbox'
+  kind: 'text' | 'checkbox' | 'date' | 'email'
 }
 
 // Derived from the field order of the original frontend stub, which already
@@ -18,10 +18,10 @@ export const stepFieldConfigs: Record<
 > = {
   'personal-details': [
     { key: 'name', label: 'Name', kind: 'text' },
-    { key: 'dateOfBirth', label: 'Date of birth', kind: 'text' },
+    { key: 'dateOfBirth', label: 'Date of birth', kind: 'date' },
     { key: 'country', label: 'Country', kind: 'text' },
     { key: 'nationality', label: 'Nationality', kind: 'text' },
-    { key: 'email', label: 'Email', kind: 'text' },
+    { key: 'email', label: 'Email', kind: 'email' },
     { key: 'phone', label: 'Phone', kind: 'text' },
     {
       key: 'consentConfirmed',
@@ -33,7 +33,7 @@ export const stepFieldConfigs: Record<
     { key: 'documentType', label: 'Document type', kind: 'text' },
     { key: 'documentNumber', label: 'Document number', kind: 'text' },
     { key: 'documentCountry', label: 'Document country', kind: 'text' },
-    { key: 'expiry', label: 'Expiry', kind: 'text' },
+    { key: 'expiry', label: 'Expiry', kind: 'date' },
     { key: 'street', label: 'Street', kind: 'text' },
     { key: 'city', label: 'City', kind: 'text' },
     { key: 'postal', label: 'Postal code', kind: 'text' },

@@ -145,3 +145,21 @@ test('a stale save conflicts with a change made elsewhere, and Reload recovers',
   await reloadButton.click()
   await expect(page.getByLabel('Name')).toHaveValue('Changed Elsewhere')
 })
+
+test('Continue is blocked by red, per-field errors when required fields are empty', async ({
+  page,
+}) => {
+  const email = uniqueEmail()
+  await registerAndSignIn(page, email)
+
+  await page.getByRole('button', { name: 'Start application' }).click()
+  await page.getByRole('button', { name: 'Continue' }).click()
+
+  const nameError = page.getByText('Name is required.')
+  await expect(nameError).toBeVisible()
+  await expect(nameError).toHaveCSS('color', 'rgb(180, 35, 24)')
+  await expect(page.getByLabel('Name')).toBeFocused()
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Identity and address' }),
+  ).not.toBeVisible()
+})
