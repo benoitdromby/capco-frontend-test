@@ -1,4 +1,5 @@
 import { apiRequest } from './client'
+import { csrfHeaders } from './csrf'
 
 export interface LoginApplicantInput {
   email: string
@@ -32,4 +33,11 @@ export async function loginApplicant(
     },
   )
   return response.data.attributes.href
+}
+
+export async function logoutApplicant(): Promise<void> {
+  await apiRequest<void>('/api/v1/applicant-sessions/current', {
+    method: 'DELETE',
+    headers: csrfHeaders(),
+  })
 }

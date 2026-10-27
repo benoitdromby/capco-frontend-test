@@ -234,3 +234,5 @@ In every error case, the entered values stay in the form. No browser storage is 
 - The field-to-step mapping is not defined in the contract.
 - The login schema declares `minLength: 6` on the password, while TICKET-002 only asks for required-field validation.
 - The 415 example for document-evidence uploads mentions `application/vnd.api+json` instead of `multipart/form-data` (out of scope here).
+- `POST /api/v1/applicant-applications` (create-or-get draft) is undocumented as needing CSRF — it has no `X-XSRF-TOKEN` entry in its `parameters` and no `403` in its listed responses — but live-verified it requires the header the same as the form PATCH and document-evidence POST do (missing → 403 `access-denied`).
+- The login response's `href` is not always the generic `/applications/current`: once any draft exists — even one just created with nothing saved yet — `href` points directly at the in-progress step (e.g. `/applications/{id}/identity-and-address`). Only a user with no draft at all gets the generic journey-entry href. Confirmed live.

@@ -1,33 +1,14 @@
-import { Stack } from '@kyc/ui'
 import { useNavigate } from 'react-router'
 
-import {
-  ApplicantJourneyPresentation,
-  type ApplicantJourneyPresentationFixture,
-} from './-applicant-journey-presentation'
+import { CurrentApplicationJourney } from './-current-application-journey'
 
 export default function CurrentApplicationJourneyPage() {
   const navigate = useNavigate()
-  const fixture = presentationFixture()
-
   return (
-    <Stack spacing={2}>
-      <ApplicantJourneyPresentation
-        {...fixture}
-        onPrimaryAction={() => {
-          void navigate('/applications/prototype/personal-details')
-        }}
-      />
-    </Stack>
+    <CurrentApplicationJourney
+      onNavigate={(href) => {
+        void navigate(href)
+      }}
+    />
   )
-}
-
-function presentationFixture(): ApplicantJourneyPresentationFixture {
-  return {
-    entryState: 'start',
-    progress: [
-      { step: 'personal-details', state: 'current' },
-      { step: 'identity-and-address', state: 'remaining' },
-    ],
-  }
 }

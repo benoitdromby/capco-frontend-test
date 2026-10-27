@@ -28,6 +28,20 @@ describe('apiRequest', () => {
     expect(postInit.body).toBe(JSON.stringify({ a: 1 }))
   })
 
+  it('sends a FormData body untouched, with no Content-Type set', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response(null, { status: 201 }))
+    const formData = new FormData()
+    formData.append('file', new Blob(['data']), 'test.png')
+
+    await apiRequest('/api/v1/example', { method: 'POST', body: formData })
+
+    const [, init] = fetchSpy.mock.calls[0] as [string, RequestInit]
+    expect(init.body).toBe(formData)
+    expect(new Headers(init.headers).has('Content-Type')).toBe(false)
+  })
+
   it('resolves an empty 2xx body to undefined', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(null, { status: 201 }),

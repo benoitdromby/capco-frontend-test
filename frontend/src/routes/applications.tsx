@@ -1,5 +1,14 @@
-import { Outlet } from 'react-router'
+import { href, useNavigate } from 'react-router'
 
-export default function ApplicationsLayout() {
-  return <Outlet />
+import { ApplicationsLayout } from './-applications-layout'
+
+export default function ApplicationsLayoutRoute() {
+  const navigate = useNavigate()
+  return (
+    <ApplicationsLayout
+      onLoggedOut={() => {
+        void navigate(href('/sign-in'))
+      }}
+    />
+  )
 }

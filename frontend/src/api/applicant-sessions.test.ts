@@ -1,9 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { loginApplicant } from './applicant-sessions'
+import { loginApplicant, logoutApplicant } from './applicant-sessions'
 
 afterEach(() => {
   vi.restoreAllMocks()
+  document.cookie = 'XSRF-TOKEN=; expires=Thu, 01 Jan 1970 00:00:00 GMT'
 })
 
 describe('loginApplicant', () => {
@@ -51,5 +52,21 @@ describe('loginApplicant', () => {
     await expect(
       loginApplicant({ email: 'jane@example.com', password: 'Secret!1' }),
     ).resolves.toBe('/applications/current')
+  })
+})
+
+describe('logoutApplicant', () => {
+  it('deletes the current session with the CSRF header', async () => {
+    document.cookie = 'XSRF-TOKEN=token-1'
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response(null, { status: 204 }))
+
+    await expect(logoutApplicant()).resolves.toBeUndefined()
+
+    const [url, init] = fetchSpy.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe('/api/v1/applicant-sessions/current')
+    expect(init.method).toBe('DELETE')
+    expect(new Headers(init.headers).get('X-XSRF-TOKEN')).toBe('token-1')
   })
 })
