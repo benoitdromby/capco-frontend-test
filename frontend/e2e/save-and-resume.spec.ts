@@ -38,6 +38,7 @@ test('save and resume: load, save, log out, log back in, and reload the saved dr
   await expect(
     page.getByRole('heading', { level: 1, name: 'Personal details' }),
   ).toBeVisible()
+  await expect(page).toHaveTitle('Personal details - KYC Workspace')
 
   await page.getByLabel('Name').fill('Jane Doe')
   await page.getByLabel('Date of birth').fill('1990-01-01')
@@ -58,6 +59,7 @@ test('save and resume: load, save, log out, log back in, and reload the saved dr
   await expect(
     page.getByRole('heading', { level: 1, name: 'Identity and address' }),
   ).toBeVisible()
+  await expect(page).toHaveTitle('Identity and address - KYC Workspace')
 
   await page.getByLabel('Document type').fill('Passport')
   await page.getByLabel('Document number').fill('X1234567')

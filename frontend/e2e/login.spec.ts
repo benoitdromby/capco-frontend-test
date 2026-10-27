@@ -30,6 +30,7 @@ test('a registered applicant can sign in and reach their journey', async ({
     page.getByRole('heading', { level: 1, name: 'Start your KYC application' }),
   ).toBeVisible()
   await expect(page).toHaveURL(/\/applications\/current/)
+  await expect(page).toHaveTitle('Your application - KYC Workspace')
 })
 
 test('an incorrect password shows a generic error and stays on sign-in', async ({

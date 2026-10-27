@@ -1,6 +1,14 @@
 import { Alert, Button, Typography } from '@kyc/ui'
 import { href, useNavigate } from 'react-router'
 
+import { pageTitle } from '../-page-title'
+
+import type { Route } from './+types/$applicationId.submitted'
+
+export const meta: Route.MetaFunction = () => [
+  { title: pageTitle('Application submitted') },
+]
+
 export default function SubmissionReceiptPage() {
   const navigate = useNavigate()
   const receipt = {

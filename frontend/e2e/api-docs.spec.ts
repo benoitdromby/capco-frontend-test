@@ -11,6 +11,7 @@ test('API docs URL renders Swagger UI and its OpenAPI document', async ({
   await expect(
     page.getByRole('heading', { name: 'API documentation' }),
   ).toBeVisible()
+  await expect(page).toHaveTitle('API documentation - KYC Workspace')
   await expect(page.locator('.swagger-ui .info .title')).toContainText('KYC')
   expect((await openApiResponse).ok()).toBeTruthy()
 })

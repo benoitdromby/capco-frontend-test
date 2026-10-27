@@ -9,6 +9,7 @@ test('a visitor can register and is sent to sign in, not signed in', async ({
 }) => {
   const email = uniqueEmail()
   await page.goto('/create-account')
+  await expect(page).toHaveTitle('Create account - KYC Workspace')
 
   await page.getByLabel('Email address').fill(email)
   await page.getByLabel('Password', { exact: true }).fill('Secret!1')
@@ -24,6 +25,7 @@ test('a visitor can register and is sent to sign in, not signed in', async ({
     page.getByRole('heading', { level: 1, name: 'Welcome back' }),
   ).toBeVisible()
   await expect(page).toHaveURL(/\/sign-in/)
+  await expect(page).toHaveTitle('Sign in - KYC Workspace')
 })
 
 test('registering an already-used email shows a conflict message with a sign-in link', async ({

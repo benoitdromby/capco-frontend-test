@@ -1,8 +1,15 @@
 import { Link, useLoaderData } from 'react-router'
 
+import { pageTitle } from './-page-title'
+
+import type { Route } from './+types/api-docs'
 import type { default as SwaggerUIComponent } from 'swagger-ui-react'
 import 'swagger-ui-react/swagger-ui.css'
 import './api-docs.css'
+
+export const meta: Route.MetaFunction = () => [
+  { title: pageTitle('API documentation') },
+]
 
 export async function clientLoader() {
   const { default: SwaggerUI } = await import('swagger-ui-react')

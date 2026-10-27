@@ -1,9 +1,14 @@
 import { useNavigate } from 'react-router'
 
 import { CreateAccountForm } from './-create-account-form'
+import { pageTitle } from './-page-title'
 import { parseAccountAccessSearch } from './-return-target'
 
 import type { Route } from './+types/create-account'
+
+export const meta: Route.MetaFunction = () => [
+  { title: pageTitle('Create account') },
+]
 
 export function clientLoader({ request }: Route.ClientLoaderArgs) {
   const search = Object.fromEntries(new URL(request.url).searchParams)

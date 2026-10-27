@@ -19,9 +19,15 @@ import { useEffect, useState } from 'react'
 import { href, useNavigate } from 'react-router'
 import { z } from 'zod'
 
+import { pageTitle } from '../-page-title'
+
 import styles from './applications.module.css'
 
 import type { Route } from './+types/applications'
+
+export const meta: Route.MetaFunction = () => [
+  { title: pageTitle('Applications') },
+]
 const reviewerApplicationStatuses = [
   'all',
   'draft',
